@@ -2,8 +2,7 @@
 module Util.Induction.WellFounded where
 
 open import Induction.WellFounded public using
-  ( Acc ; acc ; WellFounded ; module Subrelation ; module InverseImage
-  ; module TransitiveClosure ; module Lexicographic )
+  ( Acc ; acc ; WellFounded ; module Subrelation )
 
 open import Relation.Binary using (Rel)
 

@@ -125,7 +125,7 @@ open _⇒_ public
 
 
 record _≈_ (f g : T ⇒ U) : Set where
-  no-eta-equality
+  no-eta-equality; pattern
   constructor ≈⁺
   field
     ≈⁻ : ∀ δ (x : Obj T δ) → f .fobj x ≡ g .fobj x
@@ -275,7 +275,7 @@ proj₁∘subst B C refl x = refl
   : T ≈⟦Type⟧ U
   → ⟦Type⟧≅⟦Type⟧Canon .forth T ≡ ⟦Type⟧≅⟦Type⟧Canon .forth U
 ≈⟦Type⟧→≡Canon {Δ} {T} {U} T≈U
-  = Σ-≡⁺ (T≡U , Σ-≡⁺ ({!T≈≡U≈!} , funext∙ (funext (λ x → U .eq-IsProp _ _))))
+  = Σ-≡⁺ (T≡U , Σ-≡⁺ (T≈≡U≈ , funext∙ (funext (λ x → U .eq-IsProp _ _))))
   where
     T≅U : ∀ δ → T .Obj δ ≅ U .Obj δ
     T≅U δ = record
@@ -294,8 +294,7 @@ proj₁∘subst B C refl x = refl
 
     -- "HoTT makes everything so much nicer", they said. "It's all automatic",
     -- they said.
-    -- abstract
-    private
+    abstract
       subst-type : ∀ {α n} (A B : HLevel n α)
         → (p : A .type ≡ B .type)
         → (x : A .type)
@@ -332,66 +331,24 @@ proj₁∘subst B C refl x = refl
         → HProp-≡⁺ _ _ (eq δ δ′ δ≈δ′ x y)
 
 
-      T≈≡U≈ : {!_≡_ {lsuc lzero}
-               {{δ δ′ : ObjHSet Δ .type} →
-                eqHProp Δ δ δ′ .type →
-                U .ObjHSet δ .type → U .ObjHSet δ′ .type → HProp 0ℓ}
-               (proj₁
-                (subst {lsuc lzero} {Obj Δ → HSet 0ℓ} {lsuc lzero ⊔ℓ 0ℓ}
-                 (λ a →
-                    Σ {lsuc lzero ⊔ℓ 0ℓ} {0ℓ}
-                    ({δ δ′ : type (ObjHSet Δ)} →
-                     type (eqHProp Δ δ δ′) → type (a δ) → type (a δ′) → HProp 0ℓ)
-                    (λ eq₁ →
-                       {δ : type (ObjHSet Δ)} (x : type (a δ)) →
-                       eq₁ {δ} {δ} (Δ .eq-refl δ) x x .type))
-                 {T .ObjHSet} {U .ObjHSet} T≡U
-                 ((λ {δ} {δ′} → T .eqHProp {δ} {δ′}) ,
-                  (λ {δ} x → T .eq-refl {δ} x))))
-               (λ {δ} {δ′} → U .eqHProp {δ} {δ′})!}
-{-
-{!proj₁
-               (subst
-                (λ □ →
-                   Σ
-                   ({δ δ′ : type (ObjHSet Δ)} →
-                    type (eqHProp Δ δ δ′) → type (□ δ) → type (□ δ′) → HProp 0ℓ)
-                   (λ eq₁ →
-                      {δ : type (ObjHSet Δ)} (x : type (□ δ)) →
-                      eq₁ (Δ .eq-refl δ) x x .type))
-                T≡U ((λ {δ} {δ′} → T .eqHProp) , (λ {δ} x → T .eq-refl x)))
-               ≡ (λ {δ} {δ′} → U .eqHProp)!}
--}
-{-
-{!
-         (subst
-           (λ □ →
-             Σ
-             ({δ δ′ : ObjHSet Δ .type} →
-              eqHProp Δ δ δ′ .type →
-              □ δ .type → □ δ′ .type → HProp 0ℓ)
-             (λ eq →
-                {δ : ObjHSet Δ .type} (x : □ δ .type) →
-                eq (Δ .eq-refl δ) x x .type))
-            T≡U
-            ((λ {δ δ′} → T .eqHProp {δ} {δ′}), (λ {δ} x → T .eq-refl {δ} x))
-            -- (T .eqHProp , T .eq-refl)
-          ) .proj₁
-        ≡  {!(λ {δ} {δ′} → U .eqHProp {δ} {δ′})!} !}
- -- U .eqHProp
--}
       T≈≡U≈
-        = trans {A = {δ δ′ : ObjHSet Δ .type} →
-                      eqHProp Δ δ δ′ .type →
-                      U .ObjHSet δ .type → U .ObjHSet δ′ .type → HProp 0ℓ}
-            (
+        : _≡_ {A = ∀ {δ δ′} → Δ .eq δ δ′ → U .Obj δ → U .Obj δ′ → HProp 0ℓ}
+            (proj₁
+              (subst
+                (λ T → Σ (∀ {δ δ′} → Δ .eq δ δ′ → T δ .type → T δ′ .type
+                           → HProp 0ℓ)
+                         (λ eq → ∀ {δ} (x : T δ .type)
+                           → eq (Δ .eq-refl δ) x x .type))
+                T≡U
+                ((λ {δ δ′} → T .eqHProp {δ} {δ′}) , (λ {δ} x → T .eq-refl {δ} x))))
+            (λ {δ δ′} → U .eqHProp {δ} {δ′})
+      T≈≡U≈
+        = trans
             (proj₁∘subst
               (λ T → ∀ {δ δ′} → Δ .eq δ δ′ → T δ .type → T δ′ .type → HProp 0ℓ)
               (λ T eq → ∀ {δ} (x : T δ .type) → eq (Δ .eq-refl δ) x x .type)
               T≡U
               ((λ {δ δ′} → T .eqHProp {δ} {δ′}), (λ {δ} x → T .eq-refl {δ} x)))
-            )
-            (
             (go (Δ .Obj) (T .ObjHSet) (U .ObjHSet) (Δ .eq)
               (λ δ δ′ → T .eqHProp {δ} {δ′})
               (λ δ δ′ → U .eqHProp {δ} {δ′})
@@ -409,7 +366,6 @@ proj₁∘subst B C refl x = refl
                         (T≈U .back .feq δ≈δ′ x≈y)
                 })
 
-                 )
 
 ≈⟦Type⟧→≡ : T ≈⟦Type⟧ U → T ≡ U
 ≈⟦Type⟧→≡ T≈U = ≅-Injective ⟦Type⟧≅⟦Type⟧Canon (≈⟦Type⟧→≡Canon T≈U)
